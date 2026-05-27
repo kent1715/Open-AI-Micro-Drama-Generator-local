@@ -10,8 +10,12 @@ POLL_INTERVAL = 3  # seconds
 
 
 class MuAPIVideoGenerator:
+    requires_public_image_url = True
+
     def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or os.environ["MUAPI_KEY"]
+        self.api_key = api_key or os.getenv("MUAPI_KEY")
+        if not self.api_key:
+            raise RuntimeError("MUAPI_KEY is required when using MuAPI provider. Set MUAPI_KEY or switch provider to local/dummy.")
         self.headers = {"x-api-key": self.api_key, "Content-Type": "application/json"}
 
     async def generate_video_from_image(

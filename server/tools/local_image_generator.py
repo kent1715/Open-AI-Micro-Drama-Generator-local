@@ -5,8 +5,6 @@ import uuid
 from pathlib import Path
 from typing import Any, Optional
 
-import httpx
-
 
 DEFAULT_Z_IMAGE_BASE_URL = "http://127.0.0.1:9000"
 OUTPUT_DIR = Path("outputs") / "images"
@@ -84,6 +82,8 @@ class LocalImageGenerator:
         return sizes.get(aspect_ratio, sizes["1:1"])
 
     async def _post_generate(self, payload: dict) -> Any:
+        import httpx
+
         errors = []
         endpoints = [
             ("/generate", payload),
@@ -174,6 +174,8 @@ class LocalImageGenerator:
             return False
 
     async def _download_url(self, url: str) -> str:
+        import httpx
+
         suffix = Path(url.split("?")[0]).suffix or ".png"
         local_path = OUTPUT_DIR / f"zimage_{uuid.uuid4().hex[:10]}{suffix}"
         try:

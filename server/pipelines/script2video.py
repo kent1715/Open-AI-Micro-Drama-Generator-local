@@ -20,6 +20,13 @@ class Script2VideoPipeline:
         self.storyboard_artist = StoryboardArtist()
         self.image_gen = get_image_generator(api_key=self.api_key)
         self.video_gen = get_video_generator(api_key=self.api_key)
+        self.video_requires_public_image_url = getattr(
+            self.video_gen,
+            "requires_public_image_url",
+            False,
+        )
+        print(f"[Pipeline] video_provider={self.video_gen.__class__.__name__}")
+        print(f"[Pipeline] requires_public_image_url={self.video_requires_public_image_url}")
 
     async def run(
         self,
@@ -189,7 +196,8 @@ class Script2VideoPipeline:
         video_prompt = f"{shot.motion_desc}. {shot.audio_desc}"
 
         frame_url = shot.first_frame_url
-        if getattr(self.video_gen, "requires_public_image_url", True) and not frame_url.startswith("https://api.muapi.ai"):
+        if self.video_requires_public_image_url and not frame_url.startswith("https://api.muapi.ai"):
+            print("[Pipeline] uploading image to MuAPI")
             try:
                 from tools.muapi_uploader import upload_image_from_path, upload_image_from_url
 
@@ -198,7 +206,9 @@ class Script2VideoPipeline:
                 else:
                     frame_url = await upload_image_from_path(frame_url, self.api_key)
             except Exception as e:
-                print(f"Warning: re-upload failed, using original URL: {e}")
+                raise RuntimeError(f"Failed to upload image to MuAPI for video generation: {e}") from e
+        else:
+            print("[Pipeline] using local image path")
 
         video_output = await self.video_gen.generate_video_from_image(
             video_prompt, frame_url, duration=5, aspect_ratio="16:9"

@@ -3,8 +3,6 @@ import os
 import re
 from typing import Optional
 
-import httpx
-
 
 DEFAULT_OLLAMA_BASE_URL = "http://localhost:11434"
 DEFAULT_MODEL = "qwen3:8b"
@@ -46,6 +44,8 @@ class LocalLLM:
                 "temperature": 0.3,
             },
         }
+
+        import httpx
 
         async with httpx.AsyncClient(timeout=timeout) as client:
             resp = await client.post(self.chat_url, json=payload)

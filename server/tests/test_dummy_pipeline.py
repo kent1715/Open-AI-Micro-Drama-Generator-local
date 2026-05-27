@@ -9,6 +9,7 @@ PROJECT_DIR = SERVER_DIR.parent
 sys.path.insert(0, str(SERVER_DIR))
 os.chdir(PROJECT_DIR)
 
+os.environ.pop("MUAPI_KEY", None)
 os.environ["AI_PROVIDER"] = "dummy"
 os.environ["IMAGE_PROVIDER"] = "dummy"
 os.environ["VIDEO_PROVIDER"] = "dummy"

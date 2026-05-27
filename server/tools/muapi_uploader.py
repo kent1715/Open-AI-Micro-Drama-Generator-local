@@ -7,11 +7,19 @@ import httpx
 
 
 MUAPI_BASE = "https://api.muapi.ai/api/v1"
+MUAPI_KEY_ERROR = "MUAPI_KEY is required when using MuAPI provider. Set MUAPI_KEY or switch provider to local/dummy."
+
+
+def _get_api_key(api_key: Optional[str] = None) -> str:
+    key = api_key or os.getenv("MUAPI_KEY")
+    if not key:
+        raise RuntimeError(MUAPI_KEY_ERROR)
+    return key
 
 
 async def upload_image_from_url(url: str, api_key: Optional[str] = None) -> str:
     """Download an image from a URL and re-upload it to MuAPI. Returns MuAPI-hosted URL."""
-    key = api_key or os.environ["MUAPI_KEY"]
+    key = _get_api_key(api_key)
 
     # Download the image
     async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
@@ -44,7 +52,7 @@ async def upload_image_from_url(url: str, api_key: Optional[str] = None) -> str:
 
 async def upload_image_from_path(path: str, api_key: Optional[str] = None) -> str:
     """Upload a local image file to MuAPI. Returns MuAPI-hosted URL."""
-    key = api_key or os.environ["MUAPI_KEY"]
+    key = _get_api_key(api_key)
     headers = {"x-api-key": key}
 
     with open(path, "rb") as f:
