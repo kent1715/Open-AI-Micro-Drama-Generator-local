@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import traceback
 import uuid
 from pathlib import Path
 from typing import Any, Dict
@@ -105,6 +106,7 @@ async def run_pipeline(job_id: str, req: GenerateRequest) -> None:
     try:
         if req.mode == "script2video":
             # Script2Video: user provides a single scene script
+            print(f"[Pipeline] selected=Script2VideoPipeline job_id={job_id}")
             pipeline = Script2VideoPipeline()
             character_extractor = CharacterExtractor()
 
@@ -125,6 +127,7 @@ async def run_pipeline(job_id: str, req: GenerateRequest) -> None:
             )
         else:
             # Idea2Video: full agentic pipeline
+            print(f"[Pipeline] selected=Idea2VideoPipeline job_id={job_id}")
             pipeline = Idea2VideoPipeline()
             video_path = await pipeline.run(
                 idea=req.idea,
@@ -150,6 +153,8 @@ async def run_pipeline(job_id: str, req: GenerateRequest) -> None:
         await queue.put(complete_event)
 
     except Exception as exc:
+        print(f"[Pipeline] job_id={job_id} failed with exception:")
+        traceback.print_exc()
         error_msg = str(exc)
         job["status"] = "failed"
         job["error"] = error_msg
@@ -178,6 +183,14 @@ async def health():
 @app.post("/api/generate", response_model=GenerateResponse)
 async def generate(req: GenerateRequest, background_tasks: BackgroundTasks):
     job_id = str(uuid.uuid4())
+    source_text = (req.script if req.mode == "script2video" and req.script else req.idea) or ""
+    source_preview = source_text[:100].replace("\n", " ")
+    print(f"[Generate] job_id={job_id}")
+    print(f"[Generate] AI_PROVIDER={os.environ.get('AI_PROVIDER', 'muapi')}")
+    print(f"[Generate] IMAGE_PROVIDER={os.environ.get('IMAGE_PROVIDER', 'muapi')}")
+    print(f"[Generate] VIDEO_PROVIDER={os.environ.get('VIDEO_PROVIDER', 'muapi')}")
+    print(f"[Generate] mode={req.mode}")
+    print(f"[Generate] source_preview={source_preview}")
     jobs[job_id] = {
         "status": "running",
         "events": [],
