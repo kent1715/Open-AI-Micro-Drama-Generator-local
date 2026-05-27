@@ -197,7 +197,7 @@ class Script2VideoPipeline:
 
         frame_url = shot.first_frame_url
         if self.video_requires_public_image_url and not frame_url.startswith("https://api.muapi.ai"):
-            print("[Pipeline] uploading image to MuAPI")
+            print("[Pipeline] uploading frame to MuAPI uploader")
             try:
                 from tools.muapi_uploader import upload_image_from_path, upload_image_from_url
 
@@ -208,7 +208,7 @@ class Script2VideoPipeline:
             except Exception as e:
                 raise RuntimeError(f"Failed to upload image to MuAPI for video generation: {e}") from e
         else:
-            print("[Pipeline] using local image path")
+            print("[Pipeline] using local frame path")
 
         video_output = await self.video_gen.generate_video_from_image(
             video_prompt, frame_url, duration=5, aspect_ratio="16:9"
